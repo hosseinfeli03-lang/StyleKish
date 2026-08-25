@@ -1,0 +1,15 @@
+{
+  "name": "stylekish-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-20",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "stylekish-db",
+      "database_id": "02c67692-7284-4e1d-b219-965be1f517f0"
+    }
+  ]
+}

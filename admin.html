@@ -1,0 +1,480 @@
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>مدیریت محصولات | StyleKish</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Header -->
+  <header class="bg-black text-white shadow">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold">پنل مدیریت StyleKish</h1>
+        <p class="text-sm text-gray-400 mt-1">
+          مدیریت مستقیم محصولات Cloudflare D1
+        </p>
+      </div>
+
+      <button
+        onclick="loadProducts()"
+        class="bg-white text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200"
+      >
+        بروزرسانی
+      </button>
+    </div>
+  </header>
+
+
+  <!-- Main -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Status -->
+    <div
+      id="status"
+      class="mb-6 p-4 rounded-lg bg-white border text-sm"
+    >
+      در حال اتصال به API...
+    </div>
+
+
+    <!-- Products -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+
+      <div class="p-5 border-b flex items-center justify-between">
+        <h2 class="font-bold text-lg">
+          محصولات
+        </h2>
+
+        <span
+          id="product-count"
+          class="bg-gray-100 px-3 py-1 rounded-full text-sm"
+        >
+          ۰ محصول
+        </span>
+      </div>
+
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-sm">
+
+          <thead class="bg-gray-50 border-b">
+
+            <tr>
+              <th class="text-right p-4">تصویر</th>
+              <th class="text-right p-4">نام محصول</th>
+              <th class="text-right p-4">SKU</th>
+              <th class="text-right p-4">قیمت</th>
+              <th class="text-right p-4">موجودی</th>
+              <th class="text-right p-4">عملیات</th>
+            </tr>
+
+          </thead>
+
+
+          <tbody id="products-list">
+
+            <!-- Products inserted here -->
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+<script>
+
+const API_URL =
+  "https://stylekish-api.amin-goodarzi.workers.dev/products";
+
+
+// تبدیل عدد به فرمت فارسی
+function formatPrice(price) {
+
+  return new Intl.NumberFormat("fa-IR")
+    .format(Number(price || 0));
+
+}
+
+
+// نمایش وضعیت
+function setStatus(message, type = "info") {
+
+  const status =
+    document.getElementById("status");
+
+  status.textContent = message;
+
+  status.className =
+    "mb-6 p-4 rounded-lg border text-sm";
+
+  if (type === "success") {
+
+    status.classList.add(
+      "bg-green-50",
+      "border-green-300",
+      "text-green-700"
+    );
+
+  } else if (type === "error") {
+
+    status.classList.add(
+      "bg-red-50",
+      "border-red-300",
+      "text-red-700"
+    );
+
+  } else {
+
+    status.classList.add(
+      "bg-blue-50",
+      "border-blue-300",
+      "text-blue-700"
+    );
+
+  }
+
+}
+
+
+// دریافت محصولات
+async function loadProducts() {
+
+  const list =
+    document.getElementById("products-list");
+
+  list.innerHTML = `
+    <tr>
+      <td
+        colspan="6"
+        class="p-8 text-center text-gray-500"
+      >
+        در حال دریافت محصولات...
+      </td>
+    </tr>
+  `;
+
+  setStatus("در حال اتصال به Cloudflare API...");
+
+
+  try {
+
+    const response =
+      await fetch(API_URL, {
+        cache: "no-store"
+      });
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "API Error: " + response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (
+      !data.success ||
+      !Array.isArray(data.products)
+    ) {
+
+      throw new Error(
+        data.error ||
+        "فرمت پاسخ API نامعتبر است"
+      );
+
+    }
+
+
+    renderProducts(
+      data.products
+    );
+
+
+    setStatus(
+      `${data.products.length} محصول با موفقیت از D1 دریافت شد`,
+      "success"
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    list.innerHTML = `
+      <tr>
+        <td
+          colspan="6"
+          class="p-8 text-center text-red-600"
+        >
+          خطا در دریافت محصولات
+        </td>
+      </tr>
+    `;
+
+
+    setStatus(
+      "خطا: " + error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+// نمایش محصولات
+function renderProducts(products) {
+
+  const list =
+    document.getElementById(
+      "products-list"
+    );
+
+
+  document.getElementById(
+    "product-count"
+  ).textContent =
+    `${products.length} محصول`;
+
+
+  if (products.length === 0) {
+
+    list.innerHTML = `
+      <tr>
+        <td
+          colspan="6"
+          class="p-8 text-center text-gray-500"
+        >
+          هیچ محصولی وجود ندارد
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    products.map(product => `
+
+      <tr class="border-b hover:bg-gray-50">
+
+        <!-- Image -->
+        <td class="p-3">
+
+          ${
+            product.image
+              ? `
+                <img
+                  src="${product.image}"
+                  class="w-14 h-14 object-cover rounded-lg border"
+                  alt=""
+                >
+              `
+              : `
+                <div
+                  class="w-14 h-14 bg-gray-100 rounded-lg"
+                ></div>
+              `
+          }
+
+        </td>
+
+
+        <!-- Name -->
+        <td class="p-4 font-bold">
+
+          ${product.name || "بدون نام"}
+
+          <div class="text-xs text-gray-500 mt-1">
+
+            ${product.category || ""}
+
+          </div>
+
+        </td>
+
+
+        <!-- SKU -->
+        <td class="p-4 text-gray-600">
+
+          ${product.sku || "-"}
+
+        </td>
+
+
+        <!-- Price -->
+        <td class="p-4">
+
+          ${formatPrice(product.price)}
+
+          <span class="text-xs text-gray-500">
+            تومان
+          </span>
+
+        </td>
+
+
+        <!-- Stock -->
+        <td class="p-4">
+
+          ${
+            Number(product.in_stock)
+              ? `
+                <span
+                  class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs"
+                >
+                  موجود
+                </span>
+              `
+              : `
+                <span
+                  class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs"
+                >
+                  ناموجود
+                </span>
+              `
+          }
+
+          <div class="text-xs text-gray-500 mt-1">
+
+            تعداد:
+            ${product.stock_count ?? 0}
+
+          </div>
+
+        </td>
+
+
+        <!-- Actions -->
+        <td class="p-4">
+
+          <div class="flex gap-2">
+
+            <button
+              onclick="deleteProduct('${product.id}')"
+              class="bg-red-600 text-white px-3 py-2 rounded text-xs hover:bg-red-700"
+            >
+              حذف
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `).join("");
+
+}
+
+
+// حذف محصول
+async function deleteProduct(id) {
+
+  const confirmed =
+    confirm(
+      "آیا مطمئن هستید که می‌خواهید این محصول را حذف کنید؟"
+    );
+
+
+  if (!confirmed) {
+
+    return;
+
+  }
+
+
+  setStatus(
+    "در حال حذف محصول..."
+  );
+
+
+  try {
+
+    const response =
+      await fetch(
+        `${API_URL}/${id}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "خطا در حذف محصول"
+      );
+
+    }
+
+
+    setStatus(
+      "محصول با موفقیت حذف شد",
+      "success"
+    );
+
+
+    await loadProducts();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    setStatus(
+      "خطا: " + error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+// شروع
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    loadProducts();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
+```
