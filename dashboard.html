@@ -200,7 +200,15 @@ class="bg-neutral-900 text-white px-4 py-2 rounded text-xs font-bold hover:bg-ne
   ```html
 <script>
   const API_URL = 'https://stylekish-api.amin-goodarzi.workers.dev';
+let ADMIN_PASSWORD = localStorage.getItem('ADMIN_PASSWORD');
 
+if (!ADMIN_PASSWORD) {
+  ADMIN_PASSWORD = prompt('رمز مدیریت را وارد کنید:');
+
+  if (ADMIN_PASSWORD) {
+    localStorage.setItem('ADMIN_PASSWORD', ADMIN_PASSWORD);
+  }
+}
   let dashboardProducts = [];
 
   // =========================
@@ -264,8 +272,9 @@ class="bg-neutral-900 text-white px-4 py-2 rounded text-xs font-bold hover:bg-ne
     const response = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
-      },
+  'Content-Type': 'application/json',
+  'x-admin-password': ADMIN_PASSWORD
+}
       body: JSON.stringify(product)
     });
 
@@ -282,8 +291,9 @@ class="bg-neutral-900 text-white px-4 py-2 rounded text-xs font-bold hover:bg-ne
     const response = await fetch(`${API_URL}/products/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
-      },
+  'Content-Type': 'application/json',
+  'x-admin-password': ADMIN_PASSWORD
+}
       body: JSON.stringify(product)
     });
 
@@ -297,9 +307,13 @@ class="bg-neutral-900 text-white px-4 py-2 rounded text-xs font-bold hover:bg-ne
   }
 
   async function removeProduct(id) {
-    const response = await fetch(`${API_URL}/products/${encodeURIComponent(id)}`, {
-      method: 'DELETE'
-    });
+    const response = await fetch(`${API_URL}/products/${id}`, {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-admin-password': ADMIN_PASSWORD
+  }
+});
 
     const data = await response.json();
 

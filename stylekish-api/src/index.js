@@ -4,10 +4,16 @@ function json(data, status = 200) {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": "Content-Type, x-admin-password"
     }
   });
 }
+function checkAdmin(request, env) {
+  const password = request.headers.get("x-admin-password");
+
+  return password && password === env.ADMIN_PASSWORD;
+}
+
 
 export default {
   async fetch(request, env) {
@@ -21,7 +27,7 @@ export default {
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
+          "Access-Control-Allow-Headers": "Content-Type, x-admin-password"
         }
       });
     }
@@ -97,6 +103,15 @@ export default {
 
     // POST /products
     if (url.pathname === "/products" && method === "POST") {
+if (!checkAdmin(request, env)) {
+  return json(
+    {
+      success: false,
+      error: "Unauthorized"
+    },
+    401
+  );
+}
       try {
         const data = await request.json();
 
@@ -185,6 +200,15 @@ export default {
 
 // PUT /products/:id
 if (url.pathname.startsWith("/products/") && method === "PUT") {
+if (!checkAdmin(request, env)) {
+  return json(
+    {
+      success: false,
+      error: "Unauthorized"
+    },
+    401
+  );
+}
   const id = url.pathname.split("/")[2];
 
   try {
@@ -275,6 +299,15 @@ if (url.pathname.startsWith("/products/") && method === "PUT") {
 
 // DELETE /products/:id
 if (url.pathname.startsWith("/products/") && method === "DELETE") {
+if (!checkAdmin(request, env)) {
+  return json(
+    {
+      success: false,
+      error: "Unauthorized"
+    },
+    401
+  );
+}
   const id = url.pathname.split("/")[2];
 
   try {
